@@ -1,52 +1,33 @@
-import selenium
-import google.auth
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+import requests
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
+# # Create a new instance of the Chrome driver
+driver = webdriver.Chrome()
 
-# Set up the credentials for the Sheets API
-credentials, project = google.auth.default(scopes=['https://www.googleapis.com/auth/spreadsheets'])
-service = build('sheets', 'v4', credentials=credentials)
+# # Navigate to the website
+driver.get("https://cf.ncsbe.gov/CFDocLkup/DocumentResult/?year=2023&reports=%27SO%27")
 
-# Define the spreadsheet properties
-spreadsheet = {
-    'properties': {
-        'title': 'My New Spreadsheet'
-    }
-}
+# # Wait for the table to load
+WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "gridDocumentResults")))
 
-try:
-    # Create the spreadsheet
-    spreadsheet = service.spreadsheets().create(body=spreadsheet, fields='spreadsheetId').execute()
-    print(f'Spreadsheet ID: {spreadsheet["spreadsheetId"]}')
-except HttpError as error:
-    print(f'An error occurred: {error}')
-
-
-
-print("Done")
-exit()
-      
-# Set up the ChromeDriver with Selenium
-options = Options()
-driver = webdriver.Chrome(options=options)
-
-# Navigate to the page
-url = 'https://cf.ncsbe.gov/CFDocLkup/DocumentResult/?year=2022&reports=%27SO%27'
-driver.get(url)
-
-# Find the table element and get all the rows
+# #store the table
 table = driver.find_element(By.ID, "gridDocumentResults")
-rows = table.find_elements(By.XPATH,'//tr')
+#store the table
+tableHead = table.find_element(By.CSS_SELECTOR, "thead")
 
-# Loop through the rows and print out the data in each cell
-for row in rows:
-    cells = row.find_elements(By.XPATH,'.//td')
-    for cell in cells:
-        print(cell.text)
+# print each  column header
+thList = tableHead.find_elements(By.CSS_SELECTOR, "th")
+for th in thList:
+    print(th.text)
 
-# Close the browser window
-driver.quit()
+tBody = table.find_element(By.CSS_SELECTOR, "tbody")
+tRows = tBody.find_elements(By.CSS_SELECTOR, "tr")
+for row in tRows:
+    rowDatas = row.find_elements(By.CSS_SELECTOR, "td")
+    for data in rowDatas:
+        print(data.text, end=" ")
+    print("")
+
